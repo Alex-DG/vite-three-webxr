@@ -50,11 +50,17 @@ p {
   border-radius: 8px;
   background-color: rgb(255, 105, 180);
 }
-#app > .container button {
+#app > button {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+
   color: rgb(255, 255, 255);
   background-color: rgb(27, 27, 31, 0.9);
   border: 1px solid #fff;
-  padding: 1em;
+  padding: 1.5em;
   font-size: 1rem;
   font-weight: bold;
   text-transform: uppercase;

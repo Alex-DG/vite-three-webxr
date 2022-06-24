@@ -14,13 +14,13 @@ document.querySelector('#app').innerHTML = `
     This is an experiment using augmented reality features with the WebXR Device API.<br></br>
     Upon entering AR, a fox is waiting for you! 🦊
    </p>
-   <button id="enter-ar">Start AR</button>
  </div>
+ <button id="enter-ar">Start AR</button>
 `
 
 /**
  * Experience
  */
-new Experience({
+window.experience = new Experience({
   domElement: document.getElementById('experience'),
 })
