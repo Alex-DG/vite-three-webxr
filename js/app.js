@@ -15,7 +15,6 @@ document.querySelector('#app').innerHTML = `
     Upon entering AR, a fox is waiting for you! 🦊
    </p>
  </div>
- <button id="enter-ar">Start AR</button>
 `
 
 /**
