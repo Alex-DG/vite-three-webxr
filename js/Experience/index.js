@@ -69,8 +69,6 @@ class Experience {
   setRenderer() {
     // Create a new WebGL renderer and set the size + pixel ratio.
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    // this.renderer.setSize(innerWidth, innerHeight)
-    // this.renderer.setPixelRatio(devicePixelRatio)
     this.renderer.setSize(this.sizes.width, this.sizes.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
@@ -115,7 +113,7 @@ class Experience {
 
   // Check if browser supports WebXR with "immersive-ar".
   async start() {
-    const immersiveArSupported = false //await browserHasImmersiveArCompatibility()
+    const immersiveArSupported = await browserHasImmersiveArCompatibility()
     immersiveArSupported ? this.init() : displayUnsupportedBrowserMessage()
   }
 
