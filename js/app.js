@@ -10,9 +10,9 @@ console.log(':: https://github.com/Alex-DG/vite-three-starter ::')
 document.querySelector('#app').innerHTML = `
  <div class="container">
    <h1>AR with WebXR</h1>
-   <p>
+   <p id="ar-details">
     This is an experiment using augmented reality features with the WebXR Device API.<br></br>
-    Upon entering AR, a fox is waiting for you! 🦊
+    Upon entering AR, say hi to the foxy! 🦊
    </p>
  </div>
 `
@@ -20,6 +20,6 @@ document.querySelector('#app').innerHTML = `
 /**
  * Experience
  */
-window.experience = new Experience({
-  domElement: document.getElementById('experience'),
+new Experience({
+  container: document.getElementById('experience'),
 })

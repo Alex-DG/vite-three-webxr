@@ -1,72 +1,51 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { ARButton } from 'three/examples/jsm/webxr/ARButton.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
+import {
+  browserHasImmersiveArCompatibility,
+  displayUnsupportedBrowserMessage,
+} from './utils/xr'
+
 import modelSrc from '../../assets/models/fox-v1.glb'
-import XRApp from './XRApp'
 
 const DRACO_DECODER_PATH =
   'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/js/libs/draco/'
+
 class Experience {
   constructor(options) {
+    this.container = options.container
     this.scene = new THREE.Scene()
+    this.isReady = false
 
-    this.loader = new GLTFLoader()
-    const dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath(DRACO_DECODER_PATH)
-    this.loader.setDRACOLoader(dracoLoader)
-
-    this.container = options.domElement
-    this.init()
+    this.start()
   }
 
-  /**
-   * Experience setup
-   */
   init() {
-    this.bind()
+    this.setLoader()
     this.setLight()
     this.setSizes()
-    this.setRenderer()
     this.setCamera()
+    this.setRenderer()
+    this.setARButton()
+    this.setBox()
     this.setFox()
-    this.setResize()
-    this.setXRRApp()
+
     this.update()
-
-    console.log('🤖', 'Experience initialized')
-  }
-
-  bind() {
-    this.resize = this.resize.bind(this)
-    this.update = this.update.bind(this)
-  }
-
-  resize() {
-    // Update sizes
-    this.sizes.width = window.innerWidth
-    this.sizes.height = window.innerHeight
-
-    // Update camera
-    this.camera.aspect = this.sizes.width / this.sizes.height
-    this.camera.updateProjectionMatrix()
-
-    // Update renderer
-    this.renderer.setSize(this.sizes.width, this.sizes.height)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  setXRRApp() {
-    this.xrapp = new XRApp({
-      renderer: this.renderer,
-    })
+  setLoader() {
+    this.loader = new GLTFLoader()
+    const dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath(DRACO_DECODER_PATH)
+    this.loader.setDRACOLoader(dracoLoader)
   }
 
   setLight() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.35)
     this.scene.add(ambientLight)
   }
 
@@ -78,65 +57,81 @@ class Experience {
   }
 
   setCamera() {
-    // Base camera
     this.camera = new THREE.PerspectiveCamera(
       75,
       this.sizes.width / this.sizes.height,
       0.1,
       100
     )
-    this.camera.position.x = 1
-    this.camera.position.y = 1
-    this.camera.position.z = 1
     this.scene.add(this.camera)
-
-    // Controls
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.enableDamping = true
   }
 
   setRenderer() {
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-    })
-    this.renderer.xr = true // Enable XR functionality on the renderer.
+    // Create a new WebGL renderer and set the size + pixel ratio.
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    // this.renderer.setSize(innerWidth, innerHeight)
+    // this.renderer.setPixelRatio(devicePixelRatio)
     this.renderer.setSize(this.sizes.width, this.sizes.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    // Enable XR functionality on the renderer.
+    this.renderer.xr.enabled = true
+
+    // Add it to the DOM.
     this.container.appendChild(this.renderer.domElement)
   }
 
-  setCube() {
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshNormalMaterial()
+  setARButton() {
+    // Create the AR button element, configure our XR session, and append it to the DOM.
+    document.body.appendChild(
+      ARButton.createButton(this.renderer, { requiredFeatures: ['hit-test'] })
     )
-    this.scene.add(cube)
+  }
+
+  setBox() {
+    const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1)
+    const boxMaterial = new THREE.MeshBasicMaterial({
+      wireframe: true,
+      color: 'hotpink',
+    })
+    this.box = new THREE.Mesh(boxGeometry, boxMaterial)
+    this.box.position.z = -3
+
+    this.scene.add(this.box)
   }
 
   setFox() {
     this.loader.load(modelSrc, (gltf) => {
-      console.log({ gltf })
       this.fox = gltf.scene
+      this.fox.position.copy(this.box.position)
       this.scene.add(this.fox)
-    })
-  }
+      this.isReady = true
 
-  setResize() {
-    window.addEventListener('resize', this.resize)
+      console.log('🦊', 'Experience initialized')
+    })
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
+  // Check if browser supports WebXR with "immersive-ar".
+  async start() {
+    const immersiveArSupported = false //await browserHasImmersiveArCompatibility()
+    immersiveArSupported ? this.init() : displayUnsupportedBrowserMessage()
+  }
+
   update() {
-    // Update controls
-    this.controls.update()
+    const renderLoop = (time, frame) => {
+      if (!this.isReady) return
 
-    // Render
-    this.renderer.render(this.scene, this.camera)
+      this.box.rotation.y += 0.01
+      this.box.rotation.x += 0.01
 
-    // Call update again on the next frame
-    window.requestAnimationFrame(this.update)
+      if (this.renderer.xr.isPresenting) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    }
+
+    this.renderer.setAnimationLoop(renderLoop)
   }
 }
 
