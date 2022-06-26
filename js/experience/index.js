@@ -1,11 +1,12 @@
 import * as THREE from 'three'
-import { ARButton } from 'three/examples/jsm/webxr/ARButton.js'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { ARButton } from 'three/examples/jsm/webxr/ARButton.js'
 
 import {
   browserHasImmersiveArCompatibility,
   displayUnsupportedBrowserMessage,
+  handleXRHitTest,
 } from './utils/xr'
 
 import modelSrc from '../../assets/models/fox-v1.glb'
@@ -23,6 +24,7 @@ class Experience {
   }
 
   init() {
+    this.bind()
     this.setLoader()
     this.setLight()
     this.setSizes()
@@ -31,9 +33,30 @@ class Experience {
     this.setARButton()
     this.setBox()
     this.setFox()
+    this.setMarker()
+    this.setController()
 
     this.update()
   }
+
+  bind() {
+    this.onSelect = this.onSelect.bind(this)
+  }
+
+  onSelect() {
+    if (this.marker?.visible) {
+      // const model = this.fox.clone()
+      // const scale = 0.001
+      // model.scale.set(scale, scale, scale)
+      const model = this.box.clone()
+      model.position.setFromMatrixPosition(this.marker.matrix)
+      // Rotate the model randomly to give a bit of variation to the scene.
+      model.rotation.y = Math.random() * (Math.PI * 2)
+      model.visible = true
+      this.scene.add(model)
+    }
+  }
+  //////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +112,7 @@ class Experience {
   setBox() {
     const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1)
     const boxMaterial = new THREE.MeshBasicMaterial({
-      wireframe: true,
+      wireframe: false,
       color: 'hotpink',
     })
     this.box = new THREE.Mesh(boxGeometry, boxMaterial)
@@ -100,13 +123,34 @@ class Experience {
 
   setFox() {
     this.loader.load(modelSrc, (gltf) => {
-      this.fox = gltf.scene
-      this.fox.position.copy(this.box.position)
-      this.scene.add(this.fox)
+      this.fox = gltf.scene // TODO: fix fox scale from blender and here select mesh only
+      // gltf.scene.children[0].children[0].children[0].children[0].children[0].children.find(
+      //   (c) => c.name === 'Object_7'
+      // )
+      // this.fox.position.copy(this.box.position)
+      // this.scene.add(this.fox)
       this.isReady = true
 
-      console.log('🦊', 'Experience initialized')
+      console.log('🦊', 'Experience initialized', { fox: this.fox })
     })
+  }
+
+  setMarker() {
+    const planeMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff })
+    const planeMarkerGeometry = new THREE.RingGeometry(0.14, 0.15, 16).rotateX(
+      -Math.PI / 2
+    )
+
+    this.marker = new THREE.Mesh(planeMarkerGeometry, planeMarkerMaterial)
+    this.marker.matrixAutoUpdate = false
+    this.scene.add(this.marker)
+  }
+
+  setController() {
+    this.controller = this.renderer.xr.getController(0)
+    this.scene.add(this.controller)
+
+    this.controller.addEventListener('select', this.onSelect)
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -118,13 +162,28 @@ class Experience {
   }
 
   update() {
-    const renderLoop = (time, frame) => {
+    const renderLoop = (_, frame) => {
       if (!this.isReady) return
 
       this.box.rotation.y += 0.01
       this.box.rotation.x += 0.01
 
       if (this.renderer.xr.isPresenting) {
+        if (frame) {
+          handleXRHitTest(
+            this.renderer,
+            frame,
+            (hitPoseTransformed) => {
+              if (hitPoseTransformed) {
+                this.marker.visible = true
+                this.marker.matrix.fromArray(hitPoseTransformed)
+              }
+            },
+            () => {
+              this.marker.visible = false
+            }
+          )
+        }
         this.renderer.render(this.scene, this.camera)
       }
     }

@@ -20,6 +20,6 @@ document.querySelector('#app').innerHTML = `
 /**
  * Experience
  */
-new Experience({
+window.experience = new Experience({
   container: document.getElementById('experience'),
 })
