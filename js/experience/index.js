@@ -120,7 +120,7 @@ class Experience {
 
   setFox() {
     this.loader.load(modelSrc, (gltf) => {
-      this.fox = gltf.scene.children[0]
+      this.fox = gltf.scene // .children[0]
       this.isReady = true
 
       console.log('🦊', 'Experience initialized', {
