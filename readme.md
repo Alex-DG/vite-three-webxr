@@ -1,4 +1,8 @@
-# Vite Three WebXR
+# Vite Three WebXR Fox
+
+WebXR - Hit Test API
+
+[Live Demo](https://vite-three-webxr-fox.vercel.app/)
 
 ## Setup
 
