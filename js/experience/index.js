@@ -45,10 +45,7 @@ class Experience {
 
   onSelect() {
     if (this.marker?.visible) {
-      // const model = this.fox.clone()
-      // const scale = 0.001
-      // model.scale.set(scale, scale, scale)
-      const model = this.box.clone()
+      const model = this.fox.clone()
       model.position.setFromMatrixPosition(this.marker.matrix)
       // Rotate the model randomly to give a bit of variation to the scene.
       model.rotation.y = Math.random() * (Math.PI * 2)
@@ -68,7 +65,7 @@ class Experience {
   }
 
   setLight() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.35)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5)
     this.scene.add(ambientLight)
   }
 
@@ -112,7 +109,7 @@ class Experience {
   setBox() {
     const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1)
     const boxMaterial = new THREE.MeshBasicMaterial({
-      wireframe: false,
+      wireframe: true,
       color: 'hotpink',
     })
     this.box = new THREE.Mesh(boxGeometry, boxMaterial)
@@ -123,15 +120,12 @@ class Experience {
 
   setFox() {
     this.loader.load(modelSrc, (gltf) => {
-      this.fox = gltf.scene // TODO: fix fox scale from blender and here select mesh only
-      // gltf.scene.children[0].children[0].children[0].children[0].children[0].children.find(
-      //   (c) => c.name === 'Object_7'
-      // )
-      // this.fox.position.copy(this.box.position)
-      // this.scene.add(this.fox)
+      this.fox = gltf.scene.children[0]
       this.isReady = true
 
-      console.log('🦊', 'Experience initialized', { fox: this.fox })
+      console.log('🦊', 'Experience initialized', {
+        fox: this.fox,
+      })
     })
   }
 
