@@ -25,6 +25,7 @@ class Experience {
 
   init() {
     this.bind()
+
     this.setLoader()
     this.setLight()
     this.setSizes()
@@ -43,6 +44,8 @@ class Experience {
     this.onSelect = this.onSelect.bind(this)
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   onSelect() {
     if (this.marker?.visible) {
       const model = this.fox.clone()
@@ -53,7 +56,6 @@ class Experience {
       this.scene.add(model)
     }
   }
-  //////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////
 
